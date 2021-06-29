@@ -1,17 +1,10 @@
 const https = require('https');
 const { exec } = require('child_process');
 
-// Loop through array of existing repos
-
-// For each repo
-  // create a new repo on public github org
-  // add remote for new public repo
-  // push up local repo to new public repo
-
 
 function getRepoNames() {
-  return new Promise((resolve, reject) => {
-    exec('ls ./cloned_lessons', (err, stdout, stderr) => {
+  return new Promise((resolve) => {
+    exec('ls ./cloned_lessons', (err, stdout) => {
       if (err) console.log(err);
   
       const repoNames = stdout.split('\n');
@@ -23,65 +16,25 @@ function getRepoNames() {
 }
 
 
-function getRepos(repoNames) {
-  return new Promise((resolve, reject) => {
-    https.get('https://api.github.com/orgs/SEIR-7-06/repos?type=all', {
-      headers: {
-        Authorization: `token ${process.env.PUBLIC_GITHUB_ACCESS_TOKEN}`,
-        'Accept' : 'application/vnd.github.v3+json',
-        'user-agent': 'curl/7.55.1'
-      }
-    }, (response) => {
-      let data = '';
-      
-      response.on('data', (chunk) => {
-        data += chunk;
-      });
-      
-      response.on('end', () => {
-        console.log(data);
-        
-        const parsedData = JSON.parse(data);
-        console.log('================================')
-        // console.log(JSON.parse(data))
-        console.log('================================')
-        
-        resolve(parsedData);
-      });
-    }).on('error', (err) => {
-      console.log('error:', err.message);
-      reject(err.message);
-    });
-  });
-}
-
-
 function createOneRepo(repoName) {
-  return new Promise((resolve, reject) => {
-    let data = null;
-    
-    const request = https.request('https://api.github.com/orgs/SEIR-7-06/repos', {
+  return new Promise((resolve) => {
+    const request = https.request(`https://api.github.com/orgs/${PUBLIC_ORG_NAME}/repos`, {
       method: 'POST',
       headers: {
         Authorization: `token ${process.env.PUBLIC_GITHUB_ACCESS_TOKEN}`,
         'Accept' : 'application/vnd.github.v3+json',
         'user-agent': 'curl/7.55.1'
       },
-    }, (response) => {
-
-      console.log('statusCode:', response.statusCode);
-    });
+    }, (response) => console.log('statusCode:', response.statusCode));
   
     request.on('error', (err) => {
-      console.log('Error creating repo', repoName, err);
+      console.log('Error creating repo. Repo Name:', repoName, err);
       resolve();
     });
 
     request.write(`{ "name": "${repoName}" }`);
 
-    request.end(() => {
-      resolve();
-    });
+    request.end(() => resolve());
 
   })
 }
@@ -89,11 +42,9 @@ function createOneRepo(repoName) {
 
 function addPublicRemote(repoName) {
   return new Promise((resolve, reject) => {
-
-    // exec(`git remote add ga-706-pub https://github.com/SEIR-7-06/Arrays-iterating-over-them.git`, { cwd: `./cloned_lessons/${repoName}` }, (err, stdout, stderr) => {
     exec(`git remote add ga-706-pub git@github.com:SEIR-7-06/${repoName}.git`, { cwd: `./cloned_lessons/${repoName}` }, (err, stdout, stderr) => {
       if (err) {
-        console.log('Error adding public remote', repoName, err);
+        console.log('Error adding public remote. Repo Name:', repoName, err);
         resolve();
       };
 
@@ -104,10 +55,10 @@ function addPublicRemote(repoName) {
 
 
 function renameMainBranch(repoName) {
-  return new Promise((resolve, reject) => {
-    exec('git branch -m main', { cwd: `./cloned_lessons/${repoName}` }, (err, stdout) => {
+  return new Promise((resolve) => {
+    exec('git branch -m main', { cwd: `./cloned_lessons/${repoName}` }, (err) => {
       if (err) {
-        console.log('Error renaming branch', repoName, err);
+        console.log('Error renaming branch. Repo Name:', repoName, err);
         resolve();
       }
 
@@ -119,9 +70,9 @@ function renameMainBranch(repoName) {
 
 function pushUpCode(repoName) {
   return new Promise((resolve, reject) => {
-    exec(`git push ga-706-pub main`, { cwd: `./cloned_lessons/${repoName}` }, (err, stdout) => {
+    exec(`git push ga-706-pub main`, { cwd: `./cloned_lessons/${repoName}` }, (err) => {
       if (err) {
-        console.log('Error pushing up code', repoName, err);
+        console.log('Error pushing up code. Repo Name:', repoName, err);
         resolve();
       };
 

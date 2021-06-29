@@ -3,19 +3,9 @@ const { exec } = require('child_process');
 require('dotenv').config();
 
 
-function checkIfRepoExists(repoToCheck) {
-  exec('ls', (err, stdout, stderr) => {
-    if (err) console.log(err);
-  
-    console.log('ls: ');
-    console.log(stdout.split('\n'));
-  });
-}
-
-
 function getRepoData(pageNum) {
   return new Promise((resolve, reject) => {
-    https.get(`https://git.generalassemb.ly/api/v3/orgs/sea-seir-706/repos\?type\=all&&page=${pageNum}&per_page=100`, {
+    https.get(`https://git.generalassemb.ly/api/v3/orgs/${ENTERPRISE_ORG_NAME}/repos\?type\=all&&page=${pageNum}&per_page=100`, {
       headers: {
         Authorization: `token ${process.env.ENTERPRISE_GITHUB_ACCESS_TOKEN}`,
         'Accept' : 'application/vnd.github.v3+json'
@@ -44,8 +34,8 @@ function getRepoData(pageNum) {
 
 
 function getClonedRepos() {
-  return new Promise((resolve, reject) => {
-    exec('ls ./cloned_lessons', (err, stdout, stderr) => {
+  return new Promise((resolve) => {
+    exec('ls ./cloned_lessons', (err, stdout) => {
       if (err) console.log(err);
   
       const repoNames = stdout.split('\n');
@@ -57,31 +47,24 @@ function getClonedRepos() {
 }
 
 
-function repoIsCloned(clonedRepoNames, repoName) {
-  return clonedRepoNames.find((repo) => repo === repoName);
-}
-
-
 async function cloneRepos(cloneUrls) {
   const clonedRepos = await getClonedRepos();
 
   cloneUrls.forEach((repoObj) => {
-    // if (!repoIsCloned(clonedRepos, repoObj.repoName)) {
     exec(`git clone ${repoObj.cloneUrl} ./cloned_lessons/${repoObj.repoName}`);
-    // }
   });
 }
 
 
 function resetLessonDir() {
   return new Promise((resolve, reject) => {
-    exec('rm -rf ./cloned_lessons', (err, stdout) => {
+    exec('rm -rf ./cloned_lessons', (err) => {
       if (err) {
         console.log('Error reseting lesson dir');
         reject();
       }
 
-      exec('mkdir ./cloned_lessons', (err, stdout) => {
+      exec('mkdir ./cloned_lessons', (err) => {
         if (err) {
           console.log('Error reseting lesson dir');
           reject();
