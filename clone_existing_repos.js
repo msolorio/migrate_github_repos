@@ -20,7 +20,7 @@ function getRepoData(pageNum) {
       response.on('end', () => {
         const parsedData = JSON.parse(data);
         console.log('================================')
-        console.log(JSON.parse(data))
+        console.log(parsedData);
         console.log('================================')
         
         resolve(parsedData);
